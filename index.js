@@ -69,7 +69,7 @@ function drawPlanets() {
 
 				systemData[`${j}-${i}`] = {
 					midPoint: `${midPointX.toFixed(2)}, ${midPointY.toFixed(2)}`,
-					d: 1,
+					distance: calcDistance(planet.x, planet.y, planet1.x, planet1.y),
 				};
 			}
 		});
@@ -78,6 +78,12 @@ function drawPlanets() {
 
 simulate();
 
+function calcDistance(x1, y1, x2, y2) {
+	let a = x1 - x2;
+	let b = y1 - y2;
+
+	return Math.sqrt(a * a + b * b).toFixed(4);
+}
 function getRndColor() {
 	var r = (255 * Math.random()) | 0,
 		g = (255 * Math.random()) | 0,
