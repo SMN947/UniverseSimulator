@@ -9,7 +9,7 @@ let systemData = {};
 massFactor = 20;
 sizeFactor = 20;
 
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 3; i++) {
 	planets.push({
 		x: Math.random() * (systemCanvas.width - sizeFactor * 2) + sizeFactor,
 		y: Math.random() * (systemCanvas.height - sizeFactor * 2) + sizeFactor,
@@ -20,14 +20,8 @@ for (let i = 0; i < 5; i++) {
 }
 
 function simulate() {
-	//Añadir calculos de simulacion
-	let randSeed = 10;
-	planets = planets.map((planet, i) => {
-		planet.x += Math.random() * (randSeed - -randSeed) + -randSeed;
-		planet.y += Math.random() * (randSeed - -randSeed) + -randSeed;
-		return planet;
-	});
-	//
+	//Calcula AceleracionG, distancia, midPoint
+	let universalG = 0.0098;
 	planets.map((planet1, i) => {
 		planets.map((planet, j) => {
 			// Trazo de lineas entre planetas
@@ -42,31 +36,61 @@ function simulate() {
 				universe.fillStyle = '#000000';
 				universe.fillRect(midPointX, midPointY, sizeFactor / 2, sizeFactor / 2);
 
+				let distance = calcDistance(planet.x, planet.y, planet1.x, planet1.y);
 				systemData[`${j}-${i}`] = {
+					planet1: i,
+					planet2: j,
 					midPoint: {
 						x: midPointX.toFixed(2),
 						y: midPointY.toFixed(2),
 					},
-					distance: calcDistance(planet.x, planet.y, planet1.x, planet1.y),
+					distance: distance,
 					line: {
 						origin: {x: planet.x, y: planet.y},
 						destination: {x: planet1.x, y: planet1.y},
 					},
+					//F = G*(m1*m2/d^2
+					gAceleration:
+						universalG * ((planet.mass * planet.mass) / (distance * distance)),
 				};
 			}
 		});
 	});
 
+	// Se calcula la nueva ubicacion teniendo en cuenta la aceleracion gravitacional
+	/*
+	x3 = x1 + gAceleration * dx
+	y3 = y1 + gAceleration * dy
+	*/
+	for (relation of Object.keys(systemData)) {
+		systemPlanet = systemData[relation];
+
+		planet1Id = systemPlanet.planet1;
+		planet2Id = systemPlanet.planet2;
+
+		planet1 = planets[planet1Id];
+		planet2 = planets[planet2Id];
+		// Posicion planeta 1
+		planets[planet1Id].x = planet1.x + systemPlanet.gAceleration * planet2.x;
+		planets[planet1Id].y = planet1.y + systemPlanet.gAceleration * planet2.y;
+
+		// Posicion planeta 2
+		planets[planet2Id].x = planet2.x + systemPlanet.gAceleration * planet1.x;
+		planets[planet2Id].y = planet2.y + systemPlanet.gAceleration * planet1.y;
+	}
+
 	drawPlanets();
 	drawLines();
 
-	//console.clear();
-	//console.table(systemData);
+	console.clear();
+	console.log(systemCanvas.width / 2);
+	console.log(systemCanvas.height / 2);
+	console.table(systemData);
 
 	// requestAnimationFrame(simulate);
 	setTimeout(() => {
 		simulate();
-	}, 2000);
+	}, 500);
 }
 
 let tsInicio = new Date();
@@ -89,6 +113,7 @@ function drawLines() {
 		let line = systemData[relation].line;
 		let distance = systemData[relation].distance;
 		let midPoint = systemData[relation].midPoint;
+		let gAcel = (systemData[relation].gAceleration * 1000).toFixed(2);
 		universe.moveTo(line.origin.x, line.origin.y);
 		universe.lineTo(line.destination.x, line.destination.y);
 		universe.stroke();
@@ -96,12 +121,23 @@ function drawLines() {
 		universe.textAlign = 'center';
 		universe.textBaseline = 'middle';
 		universe.font = '15px Courier';
-		let text = [distance, distance, 1, 2, 3, 4];
+		let lineHeigth = 17;
 
 		// draw text at the midpoint
-		universe.fillStyle = '#000';
-		for (var i = 0; i < text.length; i++)
-			universe.fillText(distance, midPoint.x, midPoint.y);
+		universe.fillStyle = 'black';
+		universe.fillText(distance + 'Km', midPoint.x, midPoint.y - lineHeigth);
+		universe.fillText(gAcel + 'Mts', midPoint.x, midPoint.y + lineHeigth);
+
+		universe.fillText(
+			`X:${line.origin.x.toFixed(2)}, Y:${line.origin.y.toFixed(2)}`,
+			line.origin.x,
+			line.origin.y
+		);
+		universe.fillText(
+			`X:${line.destination.x.toFixed(2)}, Y:${line.destination.y.toFixed(2)}`,
+			line.destination.x,
+			line.destination.y
+		);
 	}
 }
 
