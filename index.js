@@ -60,6 +60,17 @@ function drawPlanets() {
 				universe.moveTo(planet1.x, planet1.y);
 				universe.lineTo(planet.x, planet.y);
 				universe.stroke();
+
+				let midPointX = planet.x + (planet1.x - planet.x) * 0.5;
+				let midPointY = planet.y + (planet1.y - planet.y) * 0.5;
+
+				universe.fillStyle = '#000000';
+				universe.fillRect(midPointX, midPointY, sizeFactor / 2, sizeFactor / 2);
+
+				systemData[`${j}-${i}`] = {
+					midPoint: `${midPointX.toFixed(2)}, ${midPointY.toFixed(2)}`,
+					d: 1,
+				};
 			}
 		});
 	});
